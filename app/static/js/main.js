@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Enviamos los datos al backend usando fetch
+    // Enviamos los datos al backend
     fetch("/agregar_gasto", {
       method: "POST",
       headers: {
@@ -48,12 +48,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Creamos elementos para cada gasto
         data.forEach((gasto) => {
-          const item = document.createElement("div");
-          item.classList.add("expense-item");
-          item.textContent = `${gasto.fecha} - ${gasto.descripcion} (${
-            gasto.categoria
-          }): S/${parseFloat(gasto.monto).toFixed(2)}`;
-          expensesList.appendChild(item);
+          const row = document.createElement("tr");
+
+          // Celda para la descripción
+          const descripcionCell = document.createElement("td");
+          descripcionCell.textContent = gasto.descripcion;
+          row.appendChild(descripcionCell);
+
+          // Celda para el monto
+          const montoCell = document.createElement("td");
+          montoCell.textContent = `S/${parseFloat(gasto.monto).toFixed(2)}`;
+          row.appendChild(montoCell);
+
+          // Celda para la categoría
+          const categoriaCell = document.createElement("td");
+          categoriaCell.textContent = gasto.categoria;
+          row.appendChild(categoriaCell);
+
+          // Celda para la fecha
+          const fechaCell = document.createElement("td");
+          fechaCell.textContent = gasto.fecha;
+          row.appendChild(fechaCell);
+
+          // Agregamos la fila a la tabla
+          expensesList.appendChild(row);
         });
       })
       .catch((error) => console.error("Error al listar los gastos:", error));

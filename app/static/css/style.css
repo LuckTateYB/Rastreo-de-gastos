@@ -110,3 +110,42 @@ button:hover {
   border-radius: 4px;
   font-size: 0.8rem;
 }
+
+/* Estilo para la tabla */
+#expensesTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-align: left;
+}
+
+/* Estilo para las cabeceras de la tabla */
+#expensesTable thead th {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+/* Estilo para las filas de la tabla */
+#expensesTable tbody tr {
+  border: 1px solid #ddd;
+  transition: background-color 0.2s;
+}
+
+/* Estilo para las celdas de las filas */
+#expensesTable tbody td {
+  padding: 10px;
+}
+
+/* Estilo para el hover de las filas */
+#expensesTable tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Alternar colores de las filas */
+#expensesTable tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
