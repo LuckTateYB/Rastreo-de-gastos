@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 
@@ -56,7 +56,15 @@ def init_db():
         except Exception as e:
             print(f"Error creating tables: {str(e)}")
 
+@app.route('/welcome')
+def welcome():
+    return render_template('welcome.html')
+
 @app.route('/')
+def home():
+    return redirect('/welcome')
+
+@app.route('/index')
 def index():
     return render_template('index.html')
 
@@ -100,7 +108,6 @@ def listar_gastos():
         for gasto in gastos
     ]
     return jsonify(lista_gastos)
-
 
 if __name__ == '__main__':
     with app.app_context():
