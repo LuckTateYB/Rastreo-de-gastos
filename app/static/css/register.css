@@ -11,7 +11,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
+  height: 100vh;
   flex-direction: column;
   line-height: 1.6;
 }
@@ -51,7 +51,7 @@ input {
 button {
   width: 100%;
   padding: 10px;
-  background: #2980b9;
+  background: #27ae60;
   border: none;
   border-radius: 5px;
   color: #fff;
@@ -60,7 +60,7 @@ button {
 }
 
 button:hover {
-  background: #3498db;
+  background: #2ecc71;
 }
 
 p {

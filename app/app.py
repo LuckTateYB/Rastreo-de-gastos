@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
+from sqlalchemy import ForeignKey
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = 'clave_secreta_segura'
+
 
 DB_USER = 'sa'
 DB_PASSWORD = 'oscar123456'
@@ -18,6 +22,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+# Modelo Usuarios
+
+class Usuario(db.Model):
+    __tablename__ = "Usuarios"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+
+
 # Modelo para los gastos
 class Gasto(db.Model):
     __tablename__ = 'gastos'
@@ -26,15 +40,7 @@ class Gasto(db.Model):
     monto = db.Column(db.Float, nullable=False)
     categoria = db.Column(db.String(50), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'descripcion': self.descripcion,
-            'monto': self.monto,
-            'categoria': self.categoria,
-            'fecha': self.fecha.strftime('%Y-%m-%d')
-        }
+    user_id = db.Column(db.Integer, ForeignKey('Usuarios.id'), nullable=False)
 
 # Test de conection a la base de datos
 def test_db_connection():
@@ -62,7 +68,43 @@ def welcome():
 
 @app.route('/')
 def home():
-    return redirect('/welcome')
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    return render_template('welcome.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        hashed_password = generate_password_hash(password)
+
+        nuevo_usuario = Usuario(username=username, password=hashed_password)
+        
+        try:
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            return redirect(url_for('home'))
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+    return render_template('register.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+
+    usuario = Usuario.query.filter_by(username=username).first()
+    if usuario and check_password_hash(usuario.password, password):
+        session['user_id'] = usuario.id
+        return redirect(url_for('index'))
+    return jsonify({'error': 'Credenciales incorrectas'}), 401
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('home'))
 
 @app.route('/index')
 def index():
@@ -70,6 +112,10 @@ def index():
 
 @app.route("/agregar_gasto", methods=["POST"])
 def agregar_gasto():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Usuario no autenticado'}), 401
+    
+    user_id = session['user_id']
     data = request.get_json()
     descripcion = data.get("descripcion")
     monto = data.get("monto")
@@ -83,10 +129,11 @@ def agregar_gasto():
     try:
         # Crear una instancia de Gasto
         nuevo_gasto = Gasto(
-            descripcion=descripcion,
-            monto=monto,
-            categoria=categoria,
-            fecha=fecha
+        descripcion=descripcion,
+        monto=monto,
+        categoria=categoria,
+        fecha=fecha,
+        user_id=user_id
         )
         db.session.add(nuevo_gasto)
         db.session.commit()
