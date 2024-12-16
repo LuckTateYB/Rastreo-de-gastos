@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, session, url_for
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from sqlalchemy import ForeignKey
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -29,6 +28,7 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    gastos = db.relationship('Gasto', backref='usuario', lazy=True)
 
 
 
@@ -40,7 +40,7 @@ class Gasto(db.Model):
     monto = db.Column(db.Float, nullable=False)
     categoria = db.Column(db.String(50), nullable=False)
     fecha = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, ForeignKey('Usuarios.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Usuarios.id'), nullable=False)
 
 # Test de conection a la base de datos
 def test_db_connection():
@@ -70,15 +70,16 @@ def welcome():
 def home():
     if 'user_id' in session:
         return redirect(url_for('index'))
-    return render_template('welcome.html')
+    return redirect(url_for('welcome'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        if Usuario.query.filter_by(username=username).first():
+            return jsonify({'error': 'El nombre de usuario ya existe'}), 400
         hashed_password = generate_password_hash(password)
-
         nuevo_usuario = Usuario(username=username, password=hashed_password)
         
         try:
@@ -144,7 +145,11 @@ def agregar_gasto():
 
 @app.route("/listar_gastos", methods=["GET"])
 def listar_gastos():
-    gastos = Gasto.query.all()
+    if 'user_id' not in session:
+        return jsonify({'error': 'Usuario no autenticado'}), 401
+
+    user_id = session['user_id']
+    gastos = Gasto.query.filter_by(user_id=user_id).all()
     lista_gastos = [
         {
             'descripcion': gasto.descripcion,
