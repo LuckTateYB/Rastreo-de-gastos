@@ -1,4 +1,5 @@
 **RASTREO DE GASTOS(TRACKPAYS)**
+
 *Descripción:*
 
 El proyecto se basa en la recolección de información de gastos del usuario permitiendole saber el total gastado.
